@@ -3,11 +3,11 @@ from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
-SECRET_KEY = "django-insecure-change-me-before-production"
+SECRET_KEY = os.environ.get("SECRET_KEY", "django-insecure-change-me-before-production")
 
-DEBUG = True
+DEBUG = os.environ.get("DEBUG", "True").lower() == "true"
 
-ALLOWED_HOSTS: list[str] = []
+ALLOWED_HOSTS = [h.strip() for h in os.environ.get("ALLOWED_HOSTS", "").split(",") if h.strip()]
 
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -34,6 +34,7 @@ AUTH_USER_MODEL = "users.User"
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     "corsheaders.middleware.CorsMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -63,9 +64,14 @@ TEMPLATES = [
 WSGI_APPLICATION = "core.wsgi.application"
 
 # ---------------------------------------------------------------------------
-# Database — SQLite by default; set USE_POSTGRES=true + DB_* for PostgreSQL
+# Database — SQLite by default; set DATABASE_URL (e.g. Render Postgres) or
+# USE_POSTGRES=true + DB_* for PostgreSQL
 # ---------------------------------------------------------------------------
-if os.environ.get("USE_POSTGRES", "").lower() == "true":
+if os.environ.get("DATABASE_URL"):
+    import dj_database_url
+
+    DATABASES = {"default": dj_database_url.parse(os.environ["DATABASE_URL"])}
+elif os.environ.get("USE_POSTGRES", "").lower() == "true":
     DATABASES = {
         "default": {
             "ENGINE": "django.db.backends.postgresql",
@@ -99,6 +105,11 @@ USE_TZ = True
 STATIC_URL = "static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
+STORAGES = {
+    "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
+    "staticfiles": {"BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage"},
+}
+
 MEDIA_URL = "media/"
 MEDIA_ROOT = BASE_DIR / "media"
 
@@ -125,12 +136,19 @@ REST_FRAMEWORK = {
 }
 
 # ---------------------------------------------------------------------------
-# CORS — allow the Vue/React PWA dev servers
+# CORS — allow the dev servers plus the deployed frontend
 # ---------------------------------------------------------------------------
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
     "http://localhost:5173",
-]
+    "https://mawsemjo.com",
+    "https://www.mawsemjo.com",
+] + [o.strip() for o in os.environ.get("CORS_EXTRA_ORIGINS", "").split(",") if o.strip()]
+
+CSRF_TRUSTED_ORIGINS = [
+    "https://mawsemjo.com",
+    "https://www.mawsemjo.com",
+] + [o.strip() for o in os.environ.get("CSRF_EXTRA_ORIGINS", "").split(",") if o.strip()]
 
 # ---------------------------------------------------------------------------
 # Email — console backend prints to terminal in development
