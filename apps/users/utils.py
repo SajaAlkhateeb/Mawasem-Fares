@@ -1,10 +1,14 @@
 from __future__ import annotations
 
+import logging
+
 from django.conf import settings
 from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import send_mail
 from django.utils.encoding import force_bytes
 from django.utils.http import urlsafe_base64_encode
+
+logger = logging.getLogger(__name__)
 
 _VERIFY_SUBJECT = "Verify your Mawasem account"
 _VERIFY_BODY = """\
@@ -45,22 +49,28 @@ def _make_uid_token(user) -> tuple[str, str]:
 def send_verification_email(user) -> None:
     uid, token = _make_uid_token(user)
     url = f"{settings.FRONTEND_URL}/verify-email?uid={uid}&token={token}"
-    send_mail(
-        subject=_VERIFY_SUBJECT,
-        message=_VERIFY_BODY.format(username=user.username, url=url),
-        from_email=settings.DEFAULT_FROM_EMAIL,
-        recipient_list=[user.email],
-        fail_silently=True,
-    )
+    try:
+        send_mail(
+            subject=_VERIFY_SUBJECT,
+            message=_VERIFY_BODY.format(username=user.username, url=url),
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[user.email],
+            fail_silently=False,
+        )
+    except Exception:
+        logger.exception("Failed to send verification email to %s", user.email)
 
 
 def send_password_reset_email(user) -> None:
     uid, token = _make_uid_token(user)
     url = f"{settings.FRONTEND_URL}/reset-password?uid={uid}&token={token}"
-    send_mail(
-        subject=_RESET_SUBJECT,
-        message=_RESET_BODY.format(username=user.username, url=url),
-        from_email=settings.DEFAULT_FROM_EMAIL,
-        recipient_list=[user.email],
-        fail_silently=True,
-    )
+    try:
+        send_mail(
+            subject=_RESET_SUBJECT,
+            message=_RESET_BODY.format(username=user.username, url=url),
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[user.email],
+            fail_silently=False,
+        )
+    except Exception:
+        logger.exception("Failed to send password reset email to %s", user.email)

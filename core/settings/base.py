@@ -135,6 +135,13 @@ REST_FRAMEWORK = {
     ],
 }
 
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "handlers": {"console": {"class": "logging.StreamHandler"}},
+    "root": {"handlers": ["console"], "level": "INFO"},
+}
+
 # ---------------------------------------------------------------------------
 # CORS — allow the dev servers plus the deployed frontend
 # ---------------------------------------------------------------------------
