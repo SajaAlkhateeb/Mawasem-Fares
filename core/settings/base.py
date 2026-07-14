@@ -20,6 +20,7 @@ INSTALLED_APPS = [
     "rest_framework",
     "corsheaders",
     "django_filters",
+    "anymail",
     # local
     "apps.users",
     "apps.farmers",
@@ -158,10 +159,15 @@ CSRF_TRUSTED_ORIGINS = [
 ] + [o.strip() for o in os.environ.get("CSRF_EXTRA_ORIGINS", "").split(",") if o.strip()]
 
 # ---------------------------------------------------------------------------
-# Email — console backend prints to terminal in development; set EMAIL_HOST
-# to send real mail (e.g. via the mawsemjo.com mailbox) in production
+# Email — console backend prints to terminal in development. In production,
+# BREVO_API_KEY sends over HTTPS via Brevo (most PaaS hosts, incl. Render,
+# block outbound SMTP ports, so raw SMTP won't reach a mail server from
+# there); EMAIL_HOST is a fallback for hosts where SMTP ports are allowed.
 # ---------------------------------------------------------------------------
-if os.environ.get("EMAIL_HOST"):
+if os.environ.get("BREVO_API_KEY"):
+    EMAIL_BACKEND = "anymail.backends.brevo.EmailBackend"
+    ANYMAIL = {"BREVO_API_KEY": os.environ["BREVO_API_KEY"]}
+elif os.environ.get("EMAIL_HOST"):
     EMAIL_BACKEND       = "django.core.mail.backends.smtp.EmailBackend"
     EMAIL_HOST          = os.environ["EMAIL_HOST"]
     EMAIL_PORT          = int(os.environ.get("EMAIL_PORT", "465"))

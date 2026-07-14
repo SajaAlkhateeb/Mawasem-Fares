@@ -20,17 +20,9 @@ services:
         fromDatabase:
           name: mawasem-db
           property: connectionString
-      - key: EMAIL_HOST
-        value: "mail.mawsemjo.com"
-      - key: EMAIL_PORT
-        value: "465"
-      - key: EMAIL_USE_SSL
-        value: "true"
-      - key: EMAIL_HOST_USER
-        value: "noreply@mawsemjo.com"
       - key: DEFAULT_FROM_EMAIL
         value: "Mawasem <noreply@mawsemjo.com>"
-      - key: EMAIL_HOST_PASSWORD
+      - key: BREVO_API_KEY
         sync: false
 
 databases:
