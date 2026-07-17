@@ -15,7 +15,9 @@ INSTALLED_APPS = [
     "django.contrib.contenttypes",
     "django.contrib.sessions",
     "django.contrib.messages",
+    "cloudinary_storage",
     "django.contrib.staticfiles",
+    "cloudinary",
     # third-party
     "rest_framework",
     "corsheaders",
@@ -106,8 +108,21 @@ USE_TZ = True
 STATIC_URL = "static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
+# Media storage — local filesystem in dev; Cloudinary in production, since
+# Render's free web services have no persistent disk (uploads vanish on
+# every redeploy otherwise).
+if os.environ.get("CLOUDINARY_CLOUD_NAME"):
+    CLOUDINARY_STORAGE = {
+        "CLOUD_NAME": os.environ["CLOUDINARY_CLOUD_NAME"],
+        "API_KEY": os.environ.get("CLOUDINARY_API_KEY", ""),
+        "API_SECRET": os.environ.get("CLOUDINARY_API_SECRET", ""),
+    }
+    default_storage = {"BACKEND": "cloudinary_storage.storage.MediaCloudinaryStorage"}
+else:
+    default_storage = {"BACKEND": "django.core.files.storage.FileSystemStorage"}
+
 STORAGES = {
-    "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
+    "default": default_storage,
     "staticfiles": {"BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage"},
 }
 
