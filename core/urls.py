@@ -1,7 +1,9 @@
+import re
+
 from django.conf import settings
-from django.conf.urls.static import static
 from django.contrib import admin
-from django.urls import include, path
+from django.urls import include, path, re_path
+from django.views.static import serve
 from rest_framework_simplejwt.views import TokenRefreshView
 
 from core.views import health_check
@@ -20,5 +22,13 @@ urlpatterns = [
     path("api/v1/", include("apps.orders.urls")),
 ]
 
-if settings.DEBUG:
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+# Serve uploaded media unconditionally (not just under DEBUG) — Django's
+# static() shortcut is a no-op unless DEBUG=True, which would 404 every
+# product image in production since there's no separate media server here.
+urlpatterns += [
+    re_path(
+        r"^%s(?P<path>.*)$" % re.escape(settings.MEDIA_URL.lstrip("/")),
+        serve,
+        {"document_root": settings.MEDIA_ROOT},
+    ),
+]
