@@ -448,6 +448,7 @@ const BLANK_FORM = {
   description_en: '', description_ar: '',
   farm_cost: '', selling_price: '', discount_price: '',
   stock: '', category: '', is_organic: false, image: null,
+  weight_value: '', weight_unit: 'kg',
 };
 
 function AddProductModal({ onClose, t, lang }) {
@@ -569,6 +570,20 @@ function AddProductModal({ onClose, t, lang }) {
                   </option>
                 ))}
               </select>
+            </div>
+            <div>
+              <label className={labelCls}>{t.packageWeight}</label>
+              <div className="flex gap-2">
+                <input name="weight_value" type="number" min="0" step="0.001"
+                  placeholder={form.weight_unit === 'box' ? '1' : '2'}
+                  value={form.weight_value} onChange={handleChange}
+                  className={`${inputCls} flex-1`} />
+                <select name="weight_unit" value={form.weight_unit} onChange={handleChange}
+                  className={`${inputCls} w-28 bg-white`}>
+                  <option value="kg">{t.weightUnitKg}</option>
+                  <option value="box">{t.weightUnitBox}</option>
+                </select>
+              </div>
             </div>
             <div>
               <label className={labelCls}>{t.uploadImage}</label>
